@@ -10,18 +10,19 @@ jobs:
     runs-on: macos-14
 
     steps:
-    - name: Checkout Code
+    - name: Checkout Code with Submodules
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
 
     - name: Select Xcode
       run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
 
-    - name: Build dependencies
+    - name: Set permissions and build dependencies
       run: |
-        chmod +x build/*/build.sh || true
-        chmod +x build/*.sh || true
-        chmod +x scripts/*.sh || true
-        ./build/build_all.sh || true
+        find . -type f -name "*.sh" -exec chmod +x {} +
+        ./scripts/build_all.sh || ./build/build_all.sh || true
 
     - name: Build iOS App (.app)
       run: |
@@ -31,7 +32,9 @@ jobs:
           -sdk iphoneos \
           -configuration Release \
           -derivedDataPath build_output \
-          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          ONLY_ACTIVE_ARCH=NO
 
     - name: Package into IPA
       run: |
